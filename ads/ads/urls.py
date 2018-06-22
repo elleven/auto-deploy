@@ -15,7 +15,9 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from auto_deploy import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^api/v1/department/', views.DepartmentView.as_view())
 ]
