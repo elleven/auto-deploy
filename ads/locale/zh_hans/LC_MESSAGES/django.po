@@ -1,0 +1,94 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-06-26 10:26+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: elleven <186129007791@163.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: auto_deploy/models.py:13
+msgid "department name"
+msgstr "部门名称"
+
+#: auto_deploy/models.py:17
+msgid "tel"
+msgstr "手机号"
+
+#: auto_deploy/models.py:20
+msgid "department desc"
+msgstr "部门简介"
+
+#: auto_deploy/models.py:44
+msgid "user name"
+msgstr "用户名称"
+
+#: auto_deploy/models.py:51
+msgid "user tel"
+msgstr "用户手机号"
+
+#: auto_deploy/models.py:54
+msgid "user email"
+msgstr "用户邮箱"
+
+#: auto_deploy/models.py:91
+msgid "service name"
+msgstr "服务名称"
+
+#: auto_deploy/models.py:94
+msgid "git address"
+msgstr "代码仓库地址"
+
+#: auto_deploy/models.py:96
+msgid "language"
+msgstr "开发语言"
+
+#: auto_deploy/models.py:98
+msgid "program_path"
+msgstr "项目路径"
+
+#: auto_deploy/models.py:100
+msgid "loom_id"
+msgstr "loom id"
+
+#: auto_deploy/models.py:102
+msgid "id for service discovery"
+msgstr "服务发现注册ID"
+
+#: auto_deploy/models.py:104
+msgid "service type"
+msgstr "服务类型"
+
+#: auto_deploy/models.py:106
+msgid "service port"
+msgstr "服务端口"
+
+#: auto_deploy/models.py:108
+msgid "service desc"
+msgstr "服务简介"
+
+#: auto_deploy/models.py:139
+msgid "service"
+msgstr "服务"
+
+#: auto_deploy/models.py:140
+msgid "services"
+msgstr "服务"
+
+#: auto_deploy/views.py:25
+msgid "auth failed"
+msgstr "认证失败"
+
+#: auto_deploy/views.py:62 auto_deploy/views.py:83
+msgid "this human is too lazy to write it "
+msgstr "这个人很懒什么都没写"

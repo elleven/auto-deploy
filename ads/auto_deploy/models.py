@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
+from django.utils import timezone
 
 
 class Department(models.Model):
@@ -22,7 +23,7 @@ class Department(models.Model):
         auto_now_add=True)
 
     update_time = models.DateTimeField(
-        auto_now=True)
+        default=timezone.now)
 
     def __unicode__(self):
         return self.name
@@ -47,19 +48,37 @@ class User(models.Model):
         max_length=125, blank=True, null=True)
 
     tel = models.CharField(
-        _('联系电话'), max_length=32, null=True
+        _('user tel'), max_length=32, null=True
     )
     email = models.EmailField(
-        _('联系邮箱')
+        _('user email')
     )
     department_id = models.ForeignKey(
         Department, related_name='user_department')
+
+    create_time = models.DateTimeField(
+        auto_now_add=True)
+
+    update_time = models.DateTimeField(
+        default=timezone.now)
 
     def __unicode__(self):
         return self.username
 
     class Meta:
         db_table = 'user'
+
+
+class UserToken(models.Model):
+    """
+    用户token信息
+    """
+    user = models.OneToOneField(User)
+
+    token = models.CharField(max_length=126)
+
+    class Meta:
+        db_table = 'user_token'
 
 
 class Service(models.Model):
@@ -116,7 +135,7 @@ class Service(models.Model):
         auto_now_add=True)
 
     update_time = models.DateTimeField(
-        auto_now=True)
+        default=timezone.now)
 
     def __unicode__(self):
         return self.name
