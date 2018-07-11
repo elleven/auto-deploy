@@ -45,7 +45,7 @@ class User(models.Model):
         db_index=True
     )
     password = models.CharField(
-        max_length=125, blank=True, null=True)
+        max_length=125)
 
     tel = models.CharField(
         _('user tel'), max_length=32, null=True

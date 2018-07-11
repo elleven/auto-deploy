@@ -139,3 +139,15 @@ LANGUAGES = (
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# rest_framework settings
+REST_FRAMEWORK = {
+    "DEFAULT_VERSIONS_CLASS": "rest_framework.versioning.URLPathVersioning",
+    "DEFAULT_VERSION": 'v1',
+    "ALLOWED_VERSIONS": ['v1'],
+    "VERSION_PARAM": 'version',
+    "DEFAULT_PARSER_CLASSES": ['rest_framework.parsers.JSONParser', 'rest_framework.parsers.FormParser']
+}
+
+
+

@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from models import Department, User, UserToken
 from django.utils.translation import ugettext_lazy as _
 # from django.core import serializers
+from rest_framework import serializers
 from django.forms.models import model_to_dict
 from django.utils import timezone
 from rest_framework import exceptions
@@ -19,7 +20,7 @@ class LdapAuth(BaseAuthentication):
     """ldap auth
     """
     def authenticate(self, request):
-        token = request.data.get('token') or request._request.GET.get('token')
+        token = request.data.get('token') or request.query_params.get('token')
         if not token:
             raise exceptions.AuthenticationFailed(_('auth failed'))
         token_obj = UserToken.objects.filter(token=token).first()
@@ -62,7 +63,6 @@ class AuthView(APIView):
             ret['code'] = 5001
             ret['msg'] = str(why)
             return JsonResponse(ret)
-
         ret['token'] = token
         return JsonResponse(ret)
 
@@ -72,9 +72,10 @@ class DepartmentView(APIView):
     部门api
     """
     authentication_classes = [LdapAuth, ]
+    # parser_classes = [JSONParser, FormParser, ]
 
     def get(self, request, *args, **kwargs):
-        limits = request._request.GET.get('limits', 3)
+        limits = request.query_params.get('limits', 3)
         ret = {
             'code': 2000,
             'msg': u'success',
@@ -95,9 +96,9 @@ class DepartmentView(APIView):
             'data': None,
         }
         try:
-            department_name = request._request.POST.get('department_name')
-            tel = request._request.POST.get('tel', None)
-            desc = request._request.POST.get('desc', _('this human is too lazy to write it '))
+            department_name = request.data.get('department_name')
+            tel = request.data.get('tel', None)
+            desc = request.data.get('desc', _('this human is too lazy to write it '))
             data, success = Department.objects.get_or_create(name=department_name, tel=tel, desc=desc)
             if not success:
                 ret['code'] = 5001
