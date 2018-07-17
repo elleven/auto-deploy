@@ -7,9 +7,7 @@ from django.http import JsonResponse
 from models import Department, User, UserToken
 from django.utils.translation import ugettext_lazy as _
 # from django.core import serializers
-from rest_framework import serializers
-from django.forms.models import model_to_dict
-from django.utils import timezone
+from serializers import DepartmentSerializer
 from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication
 from utils.authentications import Zhe800Ldap
@@ -22,11 +20,11 @@ class LdapAuth(BaseAuthentication):
     def authenticate(self, request):
         token = request.data.get('token') or request.query_params.get('token')
         if not token:
-            raise exceptions.AuthenticationFailed(_('auth failed'))
+            raise exceptions.AuthenticationFailed
         token_obj = UserToken.objects.filter(token=token).first()
-            # token expired check(to be build)
+        # token expired check(to be build)
         if not token_obj:
-            raise exceptions.AuthenticationFailed(_('auth failed'))
+            raise exceptions.AuthenticationFailed
         return (token_obj.user, token_obj)
 
     def authenticate_header(self, request):
@@ -82,8 +80,9 @@ class DepartmentView(APIView):
             'data': None,
                }
         try:
-            datas = Department.objects.all()[:limits]
-            ret['data'] = [ model_to_dict(data) for data in datas ]
+            data = Department.objects.all()[:limits]
+            ser = DepartmentSerializer(instance=data, many=True)
+            ret['data'] = ser.data
         except exceptions.APIException as why:
             ret['code'] = 5000
             ret['msg'] = str(why)
@@ -96,14 +95,13 @@ class DepartmentView(APIView):
             'data': None,
         }
         try:
-            department_name = request.data.get('department_name')
-            tel = request.data.get('tel', None)
-            desc = request.data.get('desc', _('this human is too lazy to write it '))
-            data, success = Department.objects.get_or_create(name=department_name, tel=tel, desc=desc)
-            if not success:
+            ser = DepartmentSerializer(data=request.data)
+            if ser.is_valid():
+                ser.save()
+            else:
                 ret['code'] = 5001
-                ret['msg'] = 'already exists'
-            ret['data'] = model_to_dict(data)
+                ret['msg'] = ser.errors
+            ret['data'] = ser.validated_data
         except exceptions.APIException as why:
             ret['code'] = 5001
             ret['msg'] = str(why)
@@ -116,14 +114,19 @@ class DepartmentView(APIView):
             'data': None,
         }
         try:
-            department_id = request.data.get('id', None)
-            department_name = request.data.get('department_name')
-            tel = request.data.get('tel')
-            desc = request.data.get('desc', _('this human is too lazy to write it '))
-            Department.objects.filter(id=department_id).update(name=department_name, tel=tel,
-                                                               desc=desc, update_time=timezone.now())
-            ret['msg'] = 'update'
+            pk = request.data.get('pk', None)
+            obj = Department.objects.get(pk=pk)
+            ser = DepartmentSerializer(instance=obj, data=request.data)
+            if ser.is_valid():
+                ser.save()
+            else:
+                ret['code'] = 5002
+                ret['msg'] = ser.errors
+            ret['data'] = ser.validated_data
         except exceptions.APIException as why:
+            ret['code'] = 5002
+            ret['msg'] = str(why)
+        except Department.DoesNotExist as why:
             ret['code'] = 5002
             ret['msg'] = str(why)
         return JsonResponse(ret)
@@ -135,9 +138,8 @@ class DepartmentView(APIView):
             'data': None,
         }
         try:
-            department_id = request.data.get('id', None)
-            Department.objects.filter(id=department_id).delete()
-            ret['msg'] = 'delete'
+            pk = request.data.get('pk')
+            Department.objects.filter(pk=pk).delete()
         except exceptions.APIException as why:
             ret['code'] = 5003
             ret['msg'] = str(why)
