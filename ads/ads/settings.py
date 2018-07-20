@@ -89,8 +89,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'autodeploy',
         'USER': 'root',
-        'PASSWORD': 'new-password',
-        'HOST': '192.168.10.67',
+        'PASSWORD': '',
+        'HOST': '127.0.0.1',
         'port': '3306',
     }
 }
@@ -146,8 +146,16 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSION": 'v1',
     "ALLOWED_VERSIONS": ['v1'],
     "VERSION_PARAM": 'version',
-    "DEFAULT_PARSER_CLASSES": ['rest_framework.parsers.JSONParser', 'rest_framework.parsers.FormParser']
+    "DEFAULT_PARSER_CLASSES": ['rest_framework.parsers.JSONParser', 'rest_framework.parsers.FormParser'],
+    "DEFAULT_AUTHENTICATION_CLASSES": ['auto_deploy.utils.authentications.LdapAuth', ]
 }
 
+# ldap settings
+LDAP_URL = ''
+LDAP_ROOT_DN = ''
+LDAP_ROOT_USER = ''
+LDAP_ROOT_PASSWORD = ''
 
-
+# other settings
+# 每次服务锁定过期时间
+EXPIRE_TIME = 86400

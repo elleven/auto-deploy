@@ -2,6 +2,25 @@
 import ldap  # pip install python-ldap
 from rest_framework import exceptions
 from django.conf import settings
+from rest_framework.authentication import BaseAuthentication
+from auto_deploy.models import UserToken
+
+
+class LdapAuth(BaseAuthentication):
+    """ldap auth
+    """
+    def authenticate(self, request):
+        token = request.data.get('token') or request.query_params.get('token')
+        if not token:
+            raise exceptions.AuthenticationFailed
+        token_obj = UserToken.objects.filter(token=token).first()
+        # token expired check(to be build)
+        if not token_obj:
+            raise exceptions.AuthenticationFailed
+        return (token_obj.user, token_obj)
+
+    def authenticate_header(self, request):
+        pass
 
 
 class Zhe800Ldap(object):

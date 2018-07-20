@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.utils import timezone
+from dateutil.parser import parse
+from django.conf import settings
 
 
 class Department(models.Model):
@@ -53,7 +55,7 @@ class User(models.Model):
     email = models.EmailField(
         _('user email')
     )
-    department_id = models.ForeignKey(
+    department = models.ForeignKey(
         Department, related_name='user_department')
 
     create_time = models.DateTimeField(
@@ -86,17 +88,17 @@ class Service(models.Model):
     定义发布服务主体对象。
     """
     LANGUAGES = (
-        ('java', 'JAVA'),
-        ('ruby', 'RUBY'),
-        ('python', 'PYTHON'),
-        ('go', 'GO'),
-        ('node', 'NODE'),
+        (0, 'JAVA'),
+        (1, 'RUBY'),
+        (2, 'PYTHON'),
+        (3, 'GO'),
+        (4, 'NODE'),
     )
 
     TYPES = (
-        ('task', 'TASK'),
-        ('http', 'HTTP'),
-        ('thrift', 'THRIFT'),
+        (0, 'TASK'),
+        (1, 'HTTP'),
+        (2, 'THRIFT'),
     )
 
     name = models.CharField(
@@ -112,18 +114,18 @@ class Service(models.Model):
         _('loom_id'), max_length=125,
         db_index=True, unique=True,
         help_text=_('id for service discovery'))
-    type = models.CharField(
+    service_type = models.CharField(
         _('service type'), max_length=10, choices=TYPES)
     port = models.IntegerField(
         _('service port'), null=True, blank=True)
     desc = models.CharField(
-        _('service desc'), max_length=255)
-    department_id = models.ForeignKey(
+        _('service desc'), max_length=255, null=True, blank=True)
+    department = models.ForeignKey(
         Department, related_name='service_department')
 
-    user_id = models.ManyToManyField(User)
+    users = models.ManyToManyField(User)
 
-    lock_ts = models.BooleanField(default=False)
+    lock_ts = models.DateTimeField(default=timezone.now)
 
     pre_version_count = models.IntegerField(default=0)
 
@@ -142,7 +144,8 @@ class Service(models.Model):
 
     @property
     def is_lock(self):
-        return self.lock_ts
+        _EXPIRE_TIME = getattr(settings, 'EXPIRE_TIME', 86400)
+        return (parse(self.lock_ts) - (parse(timezone.now()))).total_seconds() < _EXPIRE_TIME
 
     class Meta:
         db_table = 'service'
@@ -152,6 +155,7 @@ class Service(models.Model):
         verbose_name_plural = _('services')
         index_together = [['name', 'loom_id'],
                           ]
+
 
 
 
