@@ -85,7 +85,7 @@ class UserToken(models.Model):
 
 class Service(models.Model):
     """
-    定义发布服务主体对象。
+    服务元数据信息，用于记录服务相关数据，作为服务数据中心基础。
     """
     LANGUAGES = (
         (0, 'JAVA'),
@@ -125,7 +125,7 @@ class Service(models.Model):
 
     users = models.ManyToManyField(User)
 
-    lock_ts = models.DateTimeField(default=timezone.now)
+    lock_ts = models.DateTimeField(null=True, blank=True)
 
     pre_version_count = models.IntegerField(default=0)
 
@@ -145,7 +145,13 @@ class Service(models.Model):
     @property
     def is_lock(self):
         _EXPIRE_TIME = getattr(settings, 'EXPIRE_TIME', 86400)
-        return (parse(self.lock_ts) - (parse(timezone.now()))).total_seconds() < _EXPIRE_TIME
+        if not self.lock_ts:
+            return False
+        return ((parse(str(timezone.now()))) - parse(str(self.lock_ts))).total_seconds() < _EXPIRE_TIME
+
+    @is_lock.setter
+    def is_lock(self, value):
+        self.lock_ts = value
 
     class Meta:
         db_table = 'service'
@@ -157,8 +163,101 @@ class Service(models.Model):
                           ]
 
 
+class ServiceSnapshot(models.Model):
+    """
+    部署任务历史快照，记录部署的host列表，
+    以及部署过程及状态的快照信息；
+    """
+    STATUS = (
+        (0, '成功'),
+        (1, '放弃'),
+        (2, '部署中')
+    )
+
+    version = models.IntegerField(
+        _('deploy version'), unique=True)
+    service = models.ForeignKey(
+        Service, related_name='service_snapshot', on_delete=models.CASCADE)
+    # 0 success, 1 destroy, 2 deploy
+    status = models.CharField(_('deploy status'),
+                              max_length=25, null=True, blank=True, choices=STATUS)
+
+    create_time = models.DateTimeField(
+        auto_now_add=True)
+
+    def __unicode__(self):
+        return self.version
+
+    class Meta:
+        db_table = 'service_snapshot'
 
 
+class ServiceActions(models.Model):
+    """
+    service 附属actions相关配置表；
+    每个服务会默认初始化几个部署步骤；
+    部署步骤顺序，默认以主键顺序排序；
+    脚本存储到本地；目录：department_id/service_id/action_id
+     script_id   owner :param
+    """
+    OWNER_ID = (
+        (0, 'Service'),
+        (1, 'ServiceSnapshot')
+    )
+    # 0 belong to Service, 1 belong to ServiceSnapshot
+    owner = models.CharField(max_length=25, choices=OWNER_ID)
+
+    # Service id or ServiceSnapshot id
+    ref_id = models.IntegerField()
+
+    name = models.CharField(_('action name'), max_length=25)
+
+    script_name = models.CharField(
+        _('script name'), max_length=125, null=True, blank=True)
+    # 如果脚本选自模板，则此字段有值
+    # origin_id = models.IntegerField()
+    create_time = models.DateTimeField(
+        auto_now_add=True)
+
+    update_time = models.DateTimeField(
+        default=timezone.now)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'service_actions'
+
+
+class ServiceHosts(models.Model):
+    """
+    service附属host相关配置
+    """
+    OWNER_ID = (
+        (0, 'Service'),
+        (1, 'ServiceSnapshot')
+    )
+
+    ENV = (
+        (0, 'Test'),
+        (1, 'Preview'),
+        (2, 'Production')
+    )
+    # 0 belong to Service, 1 belong to ServiceSnapshot
+    owner = models.CharField(max_length=25,
+                             choices=OWNER_ID)
+    # Service id or ServiceSnapshot id
+    ref_id = models.IntegerField()
+    # 0 test, 1 preview, 2 production
+    env = models.CharField(max_length=25,
+                           choices=ENV)
+    hostIp = models.CharField(max_length=255)
+
+    create_time = models.DateTimeField(
+        auto_now_add=True)
+
+    update_time = models.DateTimeField(
+        default=timezone.now)
 
 
 

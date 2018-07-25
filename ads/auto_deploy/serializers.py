@@ -8,8 +8,7 @@ from django.utils import timezone
 class DepartmentSerializer(serializers.ModelSerializer):
 
     def validate_name(self, validated_value):
-        # if not validated_value:
-        #    raise serializers.ValidationError("invalid name")
+        # 校验命名规则
         return validated_value
 
     def validate(self, attrs):
@@ -19,7 +18,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Department
-        fields = ('pk', 'name', 'tel', 'desc', 'update_time')
+        fields = ('id', 'name', 'tel', 'desc', 'update_time')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -39,10 +38,14 @@ class ServiceSerializer(serializers.ModelSerializer):
     user_id = serializers.ListField(write_only=True)
     # language = serializers.CharField(source='get_language_display')
     # service_type = serializers.CharField(source='get_service_type_display')
-    # user_id = serializers.SerializerMethodField()
-    # def get_user_id(self, row):
-    #    user_obj = row.user_id.all()
-    #    return [item.username for item in user_obj]
+    is_lock = serializers.SerializerMethodField()
+    users = serializers.SerializerMethodField()
+
+    def get_users(self, row):
+        return [user.username for user in row.users.all()]
+
+    def get_is_lock(self, row):
+        return row.is_lock
 
     def validate_name(self, validated_value):
         # 服务命名规范

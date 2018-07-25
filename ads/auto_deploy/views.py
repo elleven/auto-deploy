@@ -131,6 +131,11 @@ class DepartmentView(APIView):
         return JsonResponse(ret)
 
 
+class DepartmentViewSet(ModelViewSet):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+
+
 class UserView(ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
