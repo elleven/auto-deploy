@@ -159,8 +159,7 @@ class Service(models.Model):
         get_latest_by = 'create_time'
         verbose_name = _('service')
         verbose_name_plural = _('services')
-        index_together = [['name', 'loom_id'],
-                          ]
+        index_together = [['name', 'loom_id'], ]
 
 
 class ServiceSnapshot(models.Model):
@@ -192,14 +191,10 @@ class ServiceSnapshot(models.Model):
         db_table = 'service_snapshot'
 
 
-class ServiceActions(models.Model):
-    """
-    service 附属actions相关配置表；
-    每个服务会默认初始化几个部署步骤；
-    部署步骤顺序，默认以主键顺序排序；
-    脚本存储到本地；目录：department_id/service_id/action_id
-     script_id   owner :param
-    """
+class ServiceExtendBase(models.Model):
+    """服务相关配套配置base
+    分为快照和服务两类"""
+
     OWNER_ID = (
         (0, 'Service'),
         (1, 'ServiceSnapshot')
@@ -210,17 +205,71 @@ class ServiceActions(models.Model):
     # Service id or ServiceSnapshot id
     ref_id = models.IntegerField()
 
-    name = models.CharField(_('action name'), max_length=25)
-
-    script_name = models.CharField(
-        _('script name'), max_length=125, null=True, blank=True)
-    # 如果脚本选自模板，则此字段有值
-    # origin_id = models.IntegerField()
     create_time = models.DateTimeField(
         auto_now_add=True)
 
     update_time = models.DateTimeField(
         default=timezone.now)
+
+    class Meta:
+        abstract = True
+        index_together = ['owner', 'ref_id']
+
+
+class ActionsScripts(models.Model):
+
+    """脚本相关信息表,脚本内容文件形式存储本地目录；
+    """
+
+    SCRIPT_LANGUAGES = (
+        (0, 'python'),
+        (1, 'shell'),
+        (2, 'ruby')
+    )
+
+#   _DEFAULT_ENV = {
+#       'ADS_HOST': '%s',
+#       'ADS_RSYNC_PATH': '%s',
+#       'ADS_MODULE_VERSION': '%s',
+#       'ADS_MODULE_NAME': '%s',
+#
+#   } 待完善
+
+    script_name = models.CharField(max_length=25)
+
+    script_languages = models.CharField(max_length=10,
+                                        choices=SCRIPT_LANGUAGES)
+    desc = models.CharField(max_length=255, null=True, blank=True)
+
+    is_template = models.BooleanField(default=False)
+
+    create_time = models.DateTimeField(
+        auto_now_add=True)
+
+    update_time = models.DateTimeField(
+        default=timezone.now)
+
+
+class ServiceActions(ServiceExtendBase):
+    """
+    service 附属actions相关配置表；
+    每个服务会默认初始化几个部署步骤；
+    """
+    DEFAULT_EXEC_USERS = (
+        (0, 'root'),
+        (1, 'webuser'),
+        (2, 'mobileprod'),
+        (3, 'tradeuser')
+    )
+    _EXEC_USERS = getattr(settings, 'EXEC_USERS', DEFAULT_EXEC_USERS)
+
+    name = models.CharField(_('action name'), max_length=25)
+
+    exec_user = models.CharField(_('exec user'),
+                                 max_length=25, choices=_EXEC_USERS, null=True, blank=True)
+    script_id = models.ForeignKey(ActionsScripts, related_name='actions_script')
+    # 执行顺序
+    index_id = models.IntegerField()
 
     def __unicode__(self):
         return self.name
@@ -229,35 +278,22 @@ class ServiceActions(models.Model):
         db_table = 'service_actions'
 
 
-class ServiceHosts(models.Model):
+class ServiceHosts(ServiceExtendBase):
     """
     service附属host相关配置
     """
-    OWNER_ID = (
-        (0, 'Service'),
-        (1, 'ServiceSnapshot')
-    )
-
     ENV = (
         (0, 'Test'),
         (1, 'Preview'),
         (2, 'Production')
     )
-    # 0 belong to Service, 1 belong to ServiceSnapshot
-    owner = models.CharField(max_length=25,
-                             choices=OWNER_ID)
-    # Service id or ServiceSnapshot id
-    ref_id = models.IntegerField()
-    # 0 test, 1 preview, 2 production
+
     env = models.CharField(max_length=25,
                            choices=ENV)
     hostIp = models.CharField(max_length=255)
 
-    create_time = models.DateTimeField(
-        auto_now_add=True)
-
-    update_time = models.DateTimeField(
-        default=timezone.now)
+    class Meta:
+        db_table = 'service_hosts'
 
 
 

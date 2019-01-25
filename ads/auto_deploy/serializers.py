@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-from models import Department, User, Service
+from models import Department, User, Service, ServiceActions, ServiceSnapshot, ServiceHosts, ActionsScripts
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 
@@ -24,15 +24,14 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'tel', 'email', 'department')
+        fields = ('id', 'username', 'tel', 'email', 'department')
         depth = 1
 
 
 class ServiceSerializer(serializers.ModelSerializer):
 
-    """ 目前需求：1/获取服务信息接口时候可以嵌套查询，指定深度.
-                 2/创建或更新服务配置的时候，嵌套字段只读保存即可；无须更改嵌套字段.
-        解决方法：1/增加只写字段，读写字段分离，满足需求；
+    """ 服务元数据相关字段，读写分离；
+        其实建议嵌套字段关联 由view部分实现，比较好；
         """
     department_id = serializers.CharField(write_only=True)
     user_id = serializers.ListField(write_only=True)
@@ -99,3 +98,44 @@ class ServiceSerializer(serializers.ModelSerializer):
         model = Service
         exclude = ('lock_ts', 'create_time', )
         depth = 1
+
+
+class ServiceActionsSerializer(serializers.ModelSerializer):
+    """用于actions的修改，创建"""
+    class Meta:
+        model = ServiceActions
+        fields = '__all__'
+        depth = 1
+
+
+class ActionsScriptsSerializer(serializers.Serializer):
+    """继承Serializer，灵活度较高；
+       脚本内容存储到本地,逻辑由view部分实现；
+       保存脚本元数据至数据库；
+        """
+    id = serializers.IntegerField()
+    script_name = serializers.CharField(required=True, max_length=25)
+    script_languages = serializers.ChoiceField(required=True,
+                                               choices=ActionsScripts.SCRIPT_LANGUAGES)
+    script_content = serializers.CharField(max_length=1024, write_only=True)
+    desc = serializers.CharField(max_length=255, allow_blank=True, allow_null=True)
+    is_template = serializers.BooleanField(default=False)
+    actions_id = serializers.IntegerField(required=True, write_only=True
+                                          )
+
+    def create(self, validated_data):
+        validated_data.pop('actions_id')
+        validated_data.pop('script_content')
+        return ActionsScripts.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.script_name = validated_data.get('script_name', instance.script_name)
+        instance.script_languages = validated_data.get('script_languages', instance.script_languages)
+        instance.desc = validated_data.get('desc', instance.desc)
+        instance.is_template = validated_data.get('is_template', instance.is_template)
+        instance.save()
+        return instance
+
+
+
+
