@@ -11,11 +11,9 @@ urlpatterns = [
     url(r'^(?P<version>[v1|v2]+)/auth/$', views.AuthView.as_view(), name='auth'),
     url(r'^(?P<version>[v1|v2]+)/user/$', views.UserView.as_view({'get': 'list'})),
     url(r'^(?P<version>[v1|v2]+)/user/(?P<pk>\d+)/$', views.UserView.as_view({'get': 'retrieve'})),
-    url(r'^(?P<version>[v1|v2]+)/script_editor/$', views.ActionsScriptsSerializer.as_view({'get': 'list',
+    url(r'^(?P<version>[v1|v2]+)/script_editor/$', views.ActionsScriptsView.as_view({'get': 'list',
                                                                                            'post': 'create'})),
-    url(r'^(?P<version>[v1|v2]+)/script_editor/(?P<pk>\d+)/$', views.ActionsScriptsSerializer.as_view({
+    url(r'^(?P<version>[v1|v2]+)/script_editor/(?P<pk>\d+)/$', views.ActionsScriptsView.as_view({
         'update': 'update', 'delete': 'destory', 'get': 'retrieve'})),
     url(r'^(?P<version>[v1|v2]+)/', include(router.urls))
-
-    # 需要增加一个服务配置管理的统一入口（read-only）department 入口
 ]
